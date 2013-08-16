@@ -121,7 +121,13 @@ To use Testem for continuous integration
 
     testem ci
     
-In CI mode, Testem runs your tests on all the browsers that are available on the system one after another. To find out what browsers are currently available - those that Testem knows about and can make use of
+In CI mode, Testem runs your tests on all the browsers that are available on the system one after another.
+
+You can run multiple browsers in parallel in CI mode by specifying the `--parallel` (or `-P`) option to be the number of concurrent running browsers.
+
+    testem ci -P 5 # run 5 browser in parallel
+
+To find out what browsers are currently available - those that Testem knows about and can make use of
 
     testem launchers
     
@@ -140,7 +146,7 @@ Will print them out. The output might look like
     
 Did you notice that this system has IE versions 7-9? Yes, actually it has only IE9 installed, but Testem uses IE's compatibility mode feature to emulate IE 7 and 8.
 
-When you run `testem ci` to run tests, it outputs the results in the [TAP](http://testanything.org/wiki/index.php/Main_Page) format, which looks like
+When you run `testem ci` to run tests, it outputs the results in the [TAP](http://testanything.org/wiki/index.php/Main_Page) format by default, which looks like
 
     ok 1 Chrome 16.0 - hello should say hello.
 
@@ -154,6 +160,12 @@ TAP is a human-readable and language-agnostic test result format. TAP plugins ex
 
 * [Jenkins TAP plugin](https://wiki.jenkins-ci.org/display/JENKINS/TAP+Plugin) - I've added [detailed instructions](https://github.com/airportyh/testem/blob/master/docs/use_with_jenkins.md) for setup with Jenkins.
 * [TeamCity TAP plugin](https://github.com/pavelsher/teamcity-tap-parser)
+
+## Other Test Reporters
+
+Testem has other test reporters than TAP: `dot` and `xunit`. You can use the `-R` to specify them
+
+    testem ci -R dot
 
 ### Command line options
 
@@ -202,6 +214,8 @@ You can also ignore certain files using `src_files_ignore`.
 }
 ```
 
+Read [more details](docs/config_file.md) about the config options.
+
 Custom Test Pages
 -----------------
 
@@ -217,11 +231,26 @@ Next, the test page you use needs to have the adapter code installed on them, as
 
 ### Include Snippet
 
-Include this snippet directly after your `jasmine.js`, `qunit.js` or `mocha.js` include to enable *Testem* with your test page
+Include this snippet directly after your `jasmine.js`, `qunit.js` or `mocha.js` or `buster.js` include to enable *Testem* with your test page. 
 
 ```html
 <script src="/testem.js"></script>
 ```
+
+Or if you are using require.js or another loader, just make sure you load `/testem.js` as the next script after the test framework.
+
+### Dynamic Substitution
+
+To enable dynamically substituting in the Javascript files in your custom test page, you must
+
+1. name your test page using `.mustache` as the extension
+2. use `{{#serve_files}}` to loop over the set of Javascript files to be served, and then reference its `src` property to access their path
+
+Example:
+
+    {{#serve_files}}
+    <script src="{{src}}"></script>
+    {{/serve_files}}
 
 Launchers
 ---------

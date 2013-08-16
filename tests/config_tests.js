@@ -2,8 +2,8 @@ var Config = require('../lib/config.js')
 var test = require('./testutils.js')
 var EventEmitter = require('events').EventEmitter
 var expect = test.expect
-var spy = require('sinon').spy
-var stub = require('sinon').stub
+var bd = require('bodydouble')
+var stub = bd.stub
 var browser_launcher = require('../lib/browser_launcher')
 var assert = require('chai').assert
 
@@ -17,11 +17,28 @@ describe('Config', function(){
 		}
 		config = new Config(appMode, progOptions)
 	})
+	afterEach(function(){
+		bd.restoreStubs()
+	})
+	
 	it('can create', function(){
 		expect(config.progOptions).to.equal(progOptions)
 	})
 	it('gives progOptions properties when got', function(){
 		expect(config.get('file')).to.equal(progOptions.file)
+	})
+
+	describe('accepts empty config file', function(){
+		var config
+		beforeEach(function(done){
+			var progOptions = {framework: 'mocha', src_files: 'impl.js,tests.js'}
+			config = new Config('dev', progOptions)
+			config.read(done)
+		})
+		it('gets properties from config file', function(){
+			expect(config.get('framework')).to.equal('mocha')
+			expect(String(config.get('src_files'))).to.equal('impl.js,tests.js')
+		})
 	})
 
 	describe('read yaml config file', function(){
@@ -35,6 +52,11 @@ describe('Config', function(){
 		it('falls back to config file value when progOptions is null', function(){
 			expect(config.get('timeout')).to.equal(2)
 		})
+	})
+
+	it('calculates url for you', function(){
+		var config = new Config
+		assert.equal(config.get('url'), 'http://localhost:7357/')
 	})
 	
 	describe('read json config file', function(){
@@ -59,25 +81,22 @@ describe('Config', function(){
 			done()
 		})
 	})
-
+	
 	it('returns whether isCwdMode (read js files from current dir)', function(){
-		test.stub(config, 'get', function(key){
+		stub(config, 'get', function(key){
 			return null
 		})
 		expect(config.isCwdMode()).to.be.ok
-		config.get.restore()
-		test.stub(config, 'get', function(key){
+		stub(config, 'get', function(key){
 			if (key === 'src_files') return ['implementation.js']
 			return null
 		})
 		expect(config.isCwdMode()).to.not.be.ok
-		config.get.restore()
-		test.stub(config, 'get', function(key){
+		stub(config, 'get', function(key){
 			if (key === 'test_page') return 'tests.html'
 			return null
 		})
 		expect(config.isCwdMode()).to.not.be.ok
-		config.get.restore()
 	})
 
 	it('has fallbacks for host and port', function(){
@@ -85,47 +104,45 @@ describe('Config', function(){
 		assert.equal(config.get('host'), 'localhost')
 		assert.equal(config.get('port'), 7357)
 	})
-
-	it('should getLaunchers should call getAvailable browsers', function(){
+	
+	it('should getLaunchers should call getAvailable browsers', function(done){
 		stub(config, 'getWantedLaunchers', function(n){return n})
 		var getAvailableBrowsers = browser_launcher.getAvailableBrowsers
-		var availableBrowsers = [
-			{name: 'Chrome', exe: 'chrome.exe'}
-			, {name: 'Firefox'}
-		]
 		browser_launcher.getAvailableBrowsers = function(cb){
-			cb(availableBrowsers)
+			cb([
+				{name: 'Chrome', exe: 'chrome.exe'},
+				{name: 'Firefox'}
+			])
 		}
-		var cb = spy()
-		config.getLaunchers({}, cb)
-		expect(cb.called).to.be.ok
-		var launchers = cb.args[0][0]
-		expect(launchers.chrome.name).to.equal('Chrome')
-		expect(launchers.chrome.settings.exe).to.equal('chrome.exe')
-		expect(launchers.firefox.name).to.equal('Firefox')
-		browser_launcher.getAvailableBrowsers = getAvailableBrowsers
+		
+		config.getLaunchers(function(launchers){
+			expect(launchers.chrome.name).to.equal('Chrome')
+			expect(launchers.chrome.settings.exe).to.equal('chrome.exe')
+			expect(launchers.firefox.name).to.equal('Firefox')
+			browser_launcher.getAvailableBrowsers = getAvailableBrowsers
+			done()
+		})
 	})
 
-	it('should install custom launchers', function(){
+	it('should install custom launchers', function(done){
 		stub(config, 'getWantedLaunchers', function(n){return n})
-		var launchers = {
-			Node: {
-				command: 'node tests.js'
+		config.config = {
+			launchers: {
+				Node: {
+					command: 'node tests.js'
+				}
 			}
 		}
-		config.config = {
-			launchers: launchers
-		}
-		browser_launcher.getAvailableBrowsers = function(cb){
-			cb([])
-		}
-		var cb = spy()
-		config.getLaunchers({}, cb)
-		var launchers = cb.args[0][0]
-		expect(launchers.node.name).to.equal('Node')
-		expect(launchers.node.settings.command).to.equal('node tests.js')
+		var getAvailableBrowsers = browser_launcher.getAvailableBrowsers
+		browser_launcher.getAvailableBrowsers = function(cb){cb([])}
+		config.getLaunchers(function(launchers){
+			expect(launchers.node.name).to.equal('Node')
+			expect(launchers.node.settings.command).to.equal('node tests.js')
+			browser_launcher.getAvailableBrowsers = getAvailableBrowsers
+			done()
+		})
 	})
-
+	
 	it('getWantedLaunchers uses getWantedLauncherNames', function(){
 		stub(config, 'getWantedLauncherNames').returns(['Chrome', 'Firefox'])
 		var results = config.getWantedLaunchers({
@@ -133,14 +150,15 @@ describe('Config', function(){
 			, firefox: { name: 'Firefox' }
 		})
 		expect(results).to.deep.equal([{ name: 'Chrome' }, { name: 'Firefox' }])
+
 	})
 
 	describe('getWantedLauncherNames', function(){
 		it('adds "launch" param', function(){
 			config.progOptions.launch = 'Chrome,Firefox'
-			expect(config.getWantedLauncherNames()).to.deep.equal(['Chrome', 'Firefox'])
+			expect(config.getWantedLauncherNames()).to.deep.equal(['chrome', 'firefox'])
 			config.progOptions.launch = 'IE'
-			expect(config.getWantedLauncherNames()).to.deep.equal(['IE'])
+			expect(config.getWantedLauncherNames()).to.deep.equal(['ie'])
 		})
 		it('adds "launch_in_dev" config', function(){
 			config.config = {launch_in_dev: ['Chrome', 'Firefox']}
@@ -154,7 +172,7 @@ describe('Config', function(){
 		it('removes skip param', function(){
 			config.progOptions.launch = 'Chrome,Firefox'
 			config.progOptions.skip = 'Chrome'
-			expect(config.getWantedLauncherNames()).to.deep.equal(['Firefox'])
+			expect(config.getWantedLauncherNames()).to.deep.equal(['firefox'])
 		})
 	})
 
@@ -181,7 +199,7 @@ describe('Config', function(){
 				done()
 			})
 		})
-		it('excludes usig src_files_ignore', function(done){
+		it('excludes using src_files_ignore', function(done){
 			config.set('src_files', ['integration/*'])
 			config.set('src_files_ignore', ['**/*.sh'])
 			config.getSrcFiles(function(err, files){
@@ -319,7 +337,7 @@ describe('getTemplateData', function(){
 				src_files: ['web/*.js'],
 				serve_files: [
 					{src:'web/hello.js', attrs: []},
-					{src:'web/hello_tests.js', attrs: []}
+					{src:'web/hello_tst.js', attrs: []}
 				]
 			})
 			done()

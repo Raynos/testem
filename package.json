@@ -7,7 +7,7 @@
     "unittest",
     "browser"
   ],
-  "version": "0.2.96-dev",
+  "version": "0.3.25",
   "author": "Toby Ho <airportyh@gmail.com>",
   "repository": {
     "type": "git",
@@ -22,51 +22,48 @@
   "license": "MIT",
   "dependencies": {
     "express": "~3.1.0",
-    "mustache": "0.4.0",
+    "mustache": "~0.4.0",
     "socket.io": "~0.9.13",
     "winston": "~0.7.1",
-    "charm": "0.0.5",
-    "js-yaml": "0.3.5",
+    "charm": "~0.0.5",
+    "js-yaml": "~0.3.5",
     "tap": "*",
     "commander": "*",
     "glob": "~3.1.21",
-    "async": "0.1.15",
-    "rimraf": "*",
-    "underscore": "*",
-    "backbone": "*",
+    "async": "~0.2.7",
+    "rimraf": "~2.2.0",
+    "backbone": "~1.0.0",
     "styled_string": "*",
-    "colors": "*",
+    "colors": "~0.6.0",
     "fileset": "~0.1.4",
     "growl": "~1.7.0",
     "consolidate": "~0.8.0",
-    "did_it_work": "~0.0.2",
+    "did_it_work": "~0.0.5",
     "split": "~0.2.5"
   },
   "files": [
-    "docs",
-    "examples",
     "lib",
     "public",
     "README.md",
     "testem.js",
     "assets",
     "package.json",
-    "views",
-    "tests"
+    "views"
   ],
   "scripts": {
-    "test": "./node_modules/.bin/mocha --timeout 3000 tests/*_tests.js tests/ui/*_tests.js",
-    "cover": "cover run ./node_modules/.bin/_mocha tests/*_tests.js tests/ui/*_tests.js; cover report html; open cover_html/index.html"
+    "test": "./node_modules/.bin/mocha --timeout 3000 tests/*_tests.js tests/*/*_tests.js",
+    "cover": "cover run ./node_modules/.bin/_mocha tests/*_tests.js tests/*/*_tests.js; cover report html; open cover_html/index.html"
   },
   "devDependencies": {
     "mocha": "*",
-    "sinon": "*",
-    "async": "*",
     "chai": "*",
-    "sinon-chai": "*",
     "bufferstream": "*",
     "request": "~2.12.0",
-    "jsdom": "~0.5.2"
+    "jsdom": "~0.5.2",
+    "bodydouble": "~0.1.1",
+    "ispy": "~0.1.1",
+    "concat-stream": "~1.0.0",
+    "sinon": "~1.7.3"
   },
   "bin": {
     "testem": "./testem.js"

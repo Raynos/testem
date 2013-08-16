@@ -44,13 +44,13 @@ function qunitAdapter(socket){
         return undefined
     }
       
-    QUnit.log = function(params, e){
+    QUnit.log( function(params, e){
         if (e){
             currentTest.items.push({
                 passed: params.result,
                 line: lineNumber(e),
                 file: sourceFile(e),
-                stacktrace: stacktrace(e),
+                stack: stacktrace(e),
                 message: message(e)
             })
         }else{
@@ -62,16 +62,16 @@ function qunitAdapter(socket){
             })
         }
         
-    }
-    QUnit.testStart = function(params){
+    })
+    QUnit.testStart( function(params){
         currentTest = {
             id: id++,
             name: (currentModule ? currentModule + ': ' : '') + params.name,
             items: []
         }
         emit('tests-start')
-    }
-    QUnit.testDone = function(params){
+    })
+    QUnit.testDone( function(params){
         currentTest.failed = params.failed
         currentTest.passed = params.passed
         currentTest.total = params.total
@@ -85,16 +85,16 @@ function qunitAdapter(socket){
         results.tests.push(currentTest)
         
         emit('test-result', currentTest)
-    }
-    QUnit.moduleStart = function(params){
+    })
+    QUnit.moduleStart( function(params){
         currentModule = params.name
-    }
+    })
     QUnit.moduleEnd = function(params){
         currentModule = undefined
     }
-    QUnit.done = function(params){
+    QUnit.done( function(params){
         results.runDuration = params.runtime
         emit('all-test-results', results)
-    }
+    })
 
 }
