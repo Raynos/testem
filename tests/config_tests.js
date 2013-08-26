@@ -74,6 +74,21 @@ describe('Config', function(){
 		})
 	})
 
+	describe('read js config file', function(){
+		var config
+		beforeEach(function(done){
+			var progOptions = {
+				file: __dirname + '/testem.js'
+			}
+			config = new Config('dev', progOptions)
+			config.read(done)
+		})
+		it('gets properties from config file', function(){
+			expect(config.get('framework')).to.equal('mocha')
+			expect(String(config.get('src_files'))).to.equal('impl.js,tests.js')
+		})
+	})
+
 	it('give precendence to json config file', function(done){
 		var config = new Config('dev', {cwd: 'tests'})
 		config.read(function(){
@@ -269,6 +284,19 @@ describe('Config', function(){
 				expect(files).to.deep.equal([
 					fileEntry('config_tests.js', ['data-foo="true"', 'data-bar']),
 					fileEntry('integration/browser_tests.bat')
+				])
+				done()
+			})
+		})
+		it('allows URLs', function(done){
+			config.set('src_files', [
+				'file://integration/*', 'http://codeorigin.jquery.com/jquery-2.0.3.min.js'
+			])
+			config.getSrcFiles(function(err, files){
+				expect(files).to.deep.equal([
+					fileEntry('integration/browser_tests.bat'),
+					fileEntry('integration/browser_tests.sh'),
+					fileEntry('http://codeorigin.jquery.com/jquery-2.0.3.min.js')
 				])
 				done()
 			})

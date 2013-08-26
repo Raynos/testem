@@ -7,7 +7,7 @@
     "unittest",
     "browser"
   ],
-  "version": "0.3.25",
+  "version": "0.4.2",
   "author": "Toby Ho <airportyh@gmail.com>",
   "repository": {
     "type": "git",
@@ -39,7 +39,8 @@
     "growl": "~1.7.0",
     "consolidate": "~0.8.0",
     "did_it_work": "~0.0.5",
-    "split": "~0.2.5"
+    "split": "~0.2.5",
+    "fireworm": "~0.4.0"
   },
   "files": [
     "lib",
